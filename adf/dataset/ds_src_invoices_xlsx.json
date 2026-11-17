@@ -1,0 +1,61 @@
+{
+	"name": "ds_src_invoices_xlsx",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blobst_ewgtask",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ewg"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Invoices",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "DS2_Invoices.xlsx",
+				"container": "source"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "CompanyId",
+				"type": "String"
+			},
+			{
+				"name": "CustomerId",
+				"type": "String"
+			},
+			{
+				"name": "CountryId",
+				"type": "String"
+			},
+			{
+				"name": "DocumentNumber",
+				"type": "String"
+			},
+			{
+				"name": "DocumentType",
+				"type": "String"
+			},
+			{
+				"name": "PostingDate",
+				"type": "String"
+			},
+			{
+				"name": "Entry",
+				"type": "String"
+			},
+			{
+				"name": "EntryType",
+				"type": "String"
+			},
+			{
+				"name": "Amount",
+				"type": "String"
+			}
+		]
+	}
+}
