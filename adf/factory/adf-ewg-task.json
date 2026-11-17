@@ -1,0 +1,15 @@
+{
+	"name": "adf-ewg-task",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "swedencentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "bd98e425-fe9a-46a8-b4c6-857467acffba",
+		"tenantId": "b76d2237-7b54-4737-ab5b-3b009c7b887c"
+	}
+}
