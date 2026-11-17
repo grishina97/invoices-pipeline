@@ -1,0 +1,31 @@
+{
+	"name": "ds_src_payments_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blobst_ewgtask",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ewg"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "DS3_Payments.csv",
+				"container": "source"
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "CompanyId;CustomerId;CountryId;DocumentNumber;DocumentType;PostingDate;Entry;EntryType;Amount;InvoiceNumber;InvoiceEntry",
+				"type": "String"
+			}
+		]
+	}
+}
