@@ -1,0 +1,39 @@
+{
+	"name": "ds_src_customers_txt",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blobst_ewgtask",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ewg"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "DS1_Customers.txt",
+				"container": "source"
+			},
+			"columnDelimiter": "\t",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "CustomerId",
+				"type": "String"
+			},
+			{
+				"name": "CustomerName",
+				"type": "String"
+			},
+			{
+				"name": "CustomerCategory",
+				"type": "String"
+			}
+		]
+	}
+}
