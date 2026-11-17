@@ -1,5 +1,5 @@
 {
-	"name": "customers",
+	"name": "ds_stage_customers",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_sql_ewgtask",
