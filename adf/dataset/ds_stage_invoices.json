@@ -1,0 +1,62 @@
+{
+	"name": "ds_stage_invoices",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_ewgtask",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "CompanyId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CustomerId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CountryId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DocumentNumber",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DocumentType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PostingDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Entry",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EntryType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Amount",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SourceFileName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LoadedDateTime",
+				"type": "datetime2",
+				"scale": 7
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "invoices"
+		}
+	}
+}
