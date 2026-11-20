@@ -5,6 +5,9 @@
 			"referenceName": "ls_sql_ewgtask",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "stage"
+		},
 		"annotations": [],
 		"type": "AzureSqlTable",
 		"schema": [
