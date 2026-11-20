@@ -1,7 +1,3 @@
--- =====================================================================
--- Source data analysis (stage)
--- Profiling of customers, invoices, payments: question -> query -> result -> conclusion
--- =====================================================================
 
 -- =====================================================================
 -- 0. first look
@@ -119,8 +115,7 @@ order by payments desc;
 one row != one payment
 matching payments to invoices, typical for accounts receivable. A customer often pays several invoices with one transfer or one invoice in parts,
 and accounting then splits the payment across the specific invoices. Thanks to this we can see how much is left to pay on each invoice.
-why more payment rows than invoices:
-  one payment can settle several invoices + one invoice can be settled by several payments !!!
+why more payment rows than invoices: one payment can settle several invoices + one invoice can be settled by several payments !!!
 */
 
 -- customers
@@ -333,21 +328,7 @@ order by total desc;
 -- -> Blank: mostly before -> "prepayment"? checked below
 -- -> CR/Adj: mostly same day (ok)
 -- -> Refund and Finance Charge Memo: ok
-'''
--- how many days until customers pay? (only payments after the invoice)
-with d as (
-  select datediff(day, try_convert(date, i.PostingDate), try_convert(date, p.PostingDate, 104)) as days
-  from stage.payments p
-  join stage.invoices i on i.DocumentNumber = p.InvoiceNumber
-  where try_convert(date, p.PostingDate, 104) > try_convert(date, i.PostingDate)
-)
-select distinct
-       percentile_cont(0.5) within group (order by days) over () as median_days,
-       percentile_cont(0.9) within group (order by days) over () as p90_days,
-       avg(days * 1.0) over ()                                   as avg_days
-from d;
--- -> median 16 days, 90 % paid within 32 days, avg 18 -> normal payment terms
-'''
+
 -- order payments by date
 select top 20 p.DocumentNumber, p.DocumentType, p.PostingDate as payment_date,
        i.DocumentNumber as invoice, i.PostingDate as invoice_date, p.Amount
@@ -389,28 +370,6 @@ join stage.invoices i on i.DocumentNumber = p.InvoiceNumber
 where p.DocumentType = 'Blank'
 order by try_convert(date, p.PostingDate, 104);
 -- -> Blank paid up to 1 year before invoice -> prepayment
-'''
--- did the old payments really pay the invoices? (invoices with a payment before 2022)
-with paid as (
-  select InvoiceNumber, sum(try_cast(Amount as decimal(18, 2))) as paid_amount
-  from stage.payments
-  group by InvoiceNumber
-),
-old_inv as (
-  select distinct InvoiceNumber
-  from stage.payments
-  where try_convert(date, PostingDate, 104) < '2022-01-01'
-)
-select count(*)                                                                                           as invoices,
-       sum(case when abs(try_cast(i.Amount as decimal(18, 2)) - p.paid_amount) <= 0.05 then 1 else 0 end) as fully_paid,
-       sum(case when try_cast(i.Amount as decimal(18, 2)) - p.paid_amount > 0.05 then 1 else 0 end)       as partly_paid,
-       sum(case when try_cast(i.Amount as decimal(18, 2)) - p.paid_amount < -0.05 then 1 else 0 end)      as overpaid
-from old_inv o
-join stage.invoices i on i.DocumentNumber = o.InvoiceNumber
-join paid p on p.InvoiceNumber = o.InvoiceNumber;
--- -> 153 invoices: 149 fully paid, 4 partly paid, 0 overpaid
--- -> amounts from old payments fit the invoices
-'''
 
 ''' MY CONCLUSIONS:
 Payment type: paid up to 5 years before invoice -> its ok because the customer had money left on the account
@@ -418,15 +377,6 @@ Payment type: paid up to 5 years before invoice -> its ok because the customer h
 			  PostingDate = date of the payment document, not the date it was applied to the invoice.
 			  DocumentNumber grows with date -> the old dates are real.
 Blank type: paid up to 1 year before invoice -> prepayment.
-'''
-'''
-old payments fit the invoices (149 of 153 fully paid, none overpaid)
-limitation: the file has only applications, not the original payment amount or customer balance
-  -> cannot verify that an old payment was not used twice -> needs customer ledger data
-days to pay: median 16, 90 % within 32 days
-decision:
-  -> keep all payments, no matter how old: they settle invoices from the period
-  -> report date filter = invoice date
 '''
 
 -- =====================================================================
@@ -496,27 +446,7 @@ from stage.invoices i
 left join paid p on p.InvoiceNumber = i.DocumentNumber;   -- left join: keep invoices without payments
 -- -> 90,823 invoices, 1,205 without any payment
 -- -> fully_paid also contains credit invoices and invoices with 0 -> I need statuses
-'''
--- should "paid" mean exactly equal, or do small differences exist?
-with paid as (
-  select InvoiceNumber, sum(try_cast(Amount as decimal(18, 2))) as paid_amount
-  from stage.payments
-  group by InvoiceNumber
-)
-select top 10
-       i.DocumentNumber,
-       try_cast(i.Amount as decimal(18, 2))                 as invoiced,
-       p.paid_amount,
-       try_cast(i.Amount as decimal(18, 2)) - p.paid_amount as diff
-from stage.invoices i
-join paid p on p.InvoiceNumber = i.DocumentNumber
-where try_cast(i.Amount as decimal(18, 2)) <> p.paid_amount
-order by abs(try_cast(i.Amount as decimal(18, 2)) - p.paid_amount);
--- -> smallest: -0.03 (1 invoice, INV-PL-109073082), then 0.43, 1.32, 1.87, 4.14 ...
--- -> only one cent-level difference, everything from 0.43 up is a real partial payment
--- -> tolerance 0.05 (between 0.03 and 0.43) for cent differences (bank fees, FX, customer rounding)
---    business rule -> make it configurable, confirm with finance
-'''
+
 -- how many invoices are in each status?
 with paid as (
   select InvoiceNumber, sum(try_cast(Amount as decimal(18, 2))) as paid_amount
@@ -549,13 +479,6 @@ group by status
 order by invoices desc;
 -- -> total 90,823 = all invoices -> nothing lost or counted twice
 
-'''
--- until when is the status valid?
-select max(try_convert(date, PostingDate, 104)) as last_payment_date
-from stage.payments;
--- -> 29.03.2023 -> statuses are "as of 29.03.2023"
-'''
-
 ''' MY CONCLUSIONS:
 - the logic paid = sum of all types works
 -- 98.1 % of invoices are fully paid (89,125 of 90,823), 0 overpaid
@@ -571,7 +494,7 @@ from stage.payments;
 								keys: customers = CustomerId,
 								invoices = DocumentNumber, payments = DocumentNumber + InvoiceNumber
 2. types					->	everything converts; payments date format is dd.mm.yyyy (convert) 
-3. joins ??					->	79 payment rows without invoice, invoices missing in the source extract (keep in core with flag IsOrphan = 1)
+3. joins   					->	79 payment rows without invoice, invoices missing in the source extract (keep in core with flag IsOrphan = 1)
 								1,205 invoices without payment - valid, unpaid (keep, status Open)
 4. amounts					->	no currency column (HU = 77 % of money) (keep amounts as is, question for business about currency)
 5. dates					->	payments up to 5 years before invoice are real (number grows with date) (keep all payments, report date filter = invoice date)
@@ -580,4 +503,4 @@ from stage.payments;
 7. paid vs invoiced			->	98.1 % invoices fully paid, 0 overpaid;
 								statuses Paid / Partially paid / Open / Credit / Zero, tolerance 0.05 
 '''
--- TO DO: distinct, convert, IsOrphan, invoice statuses
+-- TO DO: distinct, convert, IsOrphan, invoice statuses 
