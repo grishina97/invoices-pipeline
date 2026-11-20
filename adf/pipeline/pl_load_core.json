@@ -1,0 +1,82 @@
+{
+	"name": "pl_load_core",
+	"properties": {
+		"activities": [
+			{
+				"name": "sp_load_customers",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[core].[load_customers]"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_sql_ewgtask",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "sp_load_invoices",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "sp_load_customers",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[core].[load_invoices]"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_sql_ewgtask",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "sp_load_payments",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "sp_load_invoices",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[core].[load_payments]"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_sql_ewgtask",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
