@@ -56,6 +56,8 @@ Details: [docs/data_analysis.md](docs/data_analysis.md).
 
 ## Report
 
+![Power BI report](powerbi/report.png)
+
 Filters: invoice date range, customer category.
 
 - **(a)** total invoiced, paid and remaining (net) amounts
