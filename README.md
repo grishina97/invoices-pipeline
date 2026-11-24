@@ -5,6 +5,7 @@ daily from Azure Storage into Azure SQL Database with Azure Data Factory, transf
 and shown in a Power BI report.
 
 ## Architecture
+![Architecture](docs/images/architecture.png)
 
 ```
 Azure Blob Storage          Azure Data Factory                 Azure SQL Database                       Power BI
@@ -19,8 +20,10 @@ DS3_Payments.csv   ─┘     pl_load_core  (3 SP)    ──>  core   (clean, ty
 
 - **Azure Data Factory** only moves files and runs stored procedures. All transformations are in SQL.
 - `pl_master_daily` runs `pl_load_stage` and then `pl_load_core` once a day (trigger `tr_daily`).
-- Every layer supports daily loads: stage is truncated and reloaded, core is loaded with MERGE (rerun = no duplicates),
-  mart views always read the current core data.
+![Master pipeline](docs/images/adf_master_pipeline.png)
+![Daily trigger run](docs/images/adf_pipeline_runs.png)
+- Every layer supports daily loads: stage is truncated and reloaded, core is loaded with MERGE (rerun = no duplicates), mart views always read the current core data.
+![SQL schemas: stage, core, mart, meta](docs/images/sql_schemas.png)
 
 ## Repository structure
 
