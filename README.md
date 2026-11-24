@@ -5,22 +5,11 @@ daily from Azure Storage into Azure SQL Database with Azure Data Factory, transf
 and shown in a Power BI report.
 
 ## Architecture
-
-```
-Azure Blob Storage          Azure Data Factory                 Azure SQL Database                       Power BI
-(source files)              (orchestration, daily trigger)
-
-DS1_Customers.txt  ─┐
-DS2_Invoices.xlsx  ─┼──>  pl_load_stage (3 Copy)  ──>  stage  (raw text)
-DS3_Payments.csv   ─┘     pl_load_core  (3 SP)    ──>  core   (clean, typed, keys, MERGE)
-                                                       mart   (dim_customer, dim_date, fct_invoice)  ──>  report
-                                                       meta   (load_log)
-```
+![Architecture](docs/images/architecture.png)
 
 - **Azure Data Factory** only moves files and runs stored procedures. All transformations are in SQL.
 - `pl_master_daily` runs `pl_load_stage` and then `pl_load_core` once a day (trigger `tr_daily`).
-- Every layer supports daily loads: stage is truncated and reloaded, core is loaded with MERGE (rerun = no duplicates),
-  mart views always read the current core data.
+- Every layer supports daily loads: stage is truncated and reloaded, core is loaded with MERGE (rerun = no duplicates), mart views always read the current core data.
 
 ## Repository structure
 
@@ -70,6 +59,20 @@ Key findings:
 - Most of the open amount belongs to customers in category OTHERS.
 - Statuses are valid as of 29.03.2023 (last payment in the data).
 - Amounts are in source currency, so totals across countries mix currencies.
+
+## Screenshots
+
+**Master pipeline** – runs stage load, then core load
+
+<img src="docs/images/adf_master_pipeline.png" width="550">
+
+**Daily trigger run** – all pipelines succeeded
+
+<img src="docs/images/adf_pipeline_runs.png" width="800">
+
+**Azure SQL Database** – stage, core, mart and meta schemas
+
+<img src="docs/images/sql_schemas.png" width="250">
 
 ## How to run
 
